@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#0a0a0f">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="TR Risk">
+  <meta name="description" content="Türkiye devalüasyon riski izleme platformu">
+  <link rel="manifest" href="/manifest.json">
+  <link rel="apple-touch-icon" href="/icons/icon-192.png">
+  <title>TR Risk Monitor</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<div class="app">
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="header-top">
+      <div class="logo">TR Risk Monitor</div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <span class="timestamp" id="ts">—</span>
+        <button class="refresh-btn" onclick="refreshData()">↻ Yenile</button>
+      </div>
+    </div>
+    <div class="tabs">
+      <button class="tab active" onclick="showSection('dashboard',this)">Dashboard</button>
+      <button class="tab" onclick="showSection('weekly',this)">Haftalık</button>
+      <button class="tab" onclick="showSection('market',this)">Piyasa</button>
+      <button class="tab" onclick="showSection('gecmis',this)">Geçmiş</button>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- ── DASHBOARD ── -->
+    <div class="section active" id="s-dashboard">
+
+      <div class="gauge-wrap">
+        <svg width="260" height="140" viewBox="0 0 260 140" style="display:block;margin:0 auto">
+          <defs>
+            <linearGradient id="gaugeGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stop-color="#4aff9a"/>
+              <stop offset="40%" stop-color="#ffaa4a"/>
+              <stop offset="100%" stop-color="#ff6b6b"/>
+            </linearGradient>
+          </defs>
+          <path d="M20 130 A110 110 0 0 1 240 130" fill="none" stroke="#1c1c26" stroke-width="16" stroke-linecap="round"/>
+          <path id="gaugeArc" d="M20 130 A110 110 0 0 1 240 130" fill="none" stroke="url(#gaugeGrad)" stroke-width="16" stroke-linecap="round" stroke-dasharray="0 345"/>
+          <line id="gaugeNeedle" x1="130" y1="130" x2="130" y2="30" stroke="#e8e8f0" stroke-width="2" stroke-linecap="round" transform="rotate(-90,130,130)"/>
+          <circle cx="130" cy="130" r="6" fill="#e8e8f0"/>
+          <text x="20" y="138" fill="#6b6b8a" font-size="10" font-family="system-ui">0</text>
+          <text x="120" y="20" fill="#6b6b8a" font-size="10" font-family="system-ui" text-anchor="middle">50</text>
+          <text x="234" y="138" fill="#6b6b8a" font-size="10" font-family="system-ui">100</text>
+          <text x="130" y="112" id="gaugeNum" text-anchor="middle" fill="#e8e8f0" font-size="32" font-weight="600" font-family="system-ui">—</text>
+        </svg>
+        <div class="gauge-label">Kur Baskısı Olasılığı</div>
+      </div>
+
+      <div class="status-banner">
+        <div>
+          <div class="s-label">Toplam Risk Skoru</div>
+          <div class="s-value" id="riskSkoru">—</div>
+        </div>
+        <span class="badge badge-artiyor" id="durumBadge">—</span>
+      </div>
+
+      <div class="score-grid">
+        <div class="score-card">
+          <div class="s-lbl">Flow Score</div>
+          <div class="s-val" id="flowScore" style="color:var(--danger)">—</div>
+          <div class="s-sub">Sermaye akımı</div>
+        </div>
+        <div class="score-card">
+          <div class="s-lbl">CDS Score</div>
+          <div class="s-val" id="cdsScore" style="color:var(--warning)">—</div>
+          <div class="s-sub">Kredi riski</div>
+        </div>
+        <div class="score-card">
+          <div class="s-lbl">Reserve Score</div>
+          <div class="s-val" id="resvScore" style="color:var(--info)">—</div>
+          <div class="s-sub">Rezerv baskısı</div>
+        </div>
+        <div class="score-card">
+          <div class="s-lbl">2Y Score</div>
+          <div class="s-val" id="y2Score" style="color:var(--success)">—</div>
+          <div class="s-sub">Faiz stresi</div>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+      <div class="section-title">Son Hafta</div>
+
+      <div class="score-grid">
+        <div class="score-card">
+          <div class="s-lbl">Son Veri</div>
+          <div class="s-val" id="sonTarih" style="font-size:15px;color:var(--accent)">—</div>
+        </div>
+        <div class="score-card">
+          <div class="s-lbl">Toplam Flow</div>
+          <div class="s-val" id="toplamFlow" style="font-size:18px">—</div>
+        </div>
+        <div class="score-card">
+          <div class="s-lbl">Brüt Rezerv</div>
+          <div class="s-val" id="brutRezv" style="font-size:18px">—</div>
+        </div>
+        <div class="score-card">
+          <div class="s-lbl">Rezerv WoW Δ</div>
+          <div class="s-val" id="rezervWow" style="font-size:18px">—</div>
+        </div>
+      </div>
+
+      <div class="chart-wrap">
+        <div class="chart-title">Risk Skoru Trendi</div>
+        <div class="chart-canvas-wrap">
+          <canvas id="riskChart" role="img" aria-label="Risk skoru trendi">Risk skoru geçmiş grafiği</canvas>
+        </div>
+      </div>
+
+      <button class="snap-btn" id="snapBtn" onclick="saveSnapshotAction()">Bu haftayı kaydet →</button>
+    </div>
+
+    <!-- ── HAFTALIK ── -->
+    <div class="section" id="s-weekly">
+      <div class="section-title">Haftalık TCMB Verisi</div>
+      <div id="weeklyList"><div class="loading"><div class="spinner"></div>Yükleniyor...</div></div>
+    </div>
+
+    <!-- ── PİYASA ── -->
+    <div class="section" id="s-market">
+      <div class="section-title">Canlı Göstergeler</div>
+      <div class="market-grid">
+        <div class="market-card">
+          <div class="m-lbl">USDTRY</div>
+          <div class="m-val" id="usdtry">—</div>
+          <div class="m-unit">TRY</div>
+        </div>
+        <div class="market-card">
+          <div class="m-lbl">Politika Faizi</div>
+          <div class="m-val" id="polFaiz">—</div>
+          <div class="m-unit">%</div>
+        </div>
+        <div class="market-card">
+          <div class="m-lbl">2Y (TLREF)</div>
+          <div class="m-val" id="tahvil2y">—</div>
+          <div class="m-unit">%</div>
+        </div>
+        <div class="market-card">
+          <div class="m-lbl">5Y CDS</div>
+          <div class="m-val" id="cds5y">—</div>
+          <div class="m-unit">bp</div>
+        </div>
+      </div>
+
+      <div class="section-title">CDS Manuel Güncelle</div>
+      <div class="cds-edit">
+        <label>Türkiye 5Y CDS (bp)</label>
+        <input type="number" id="cdsInput" step="0.01" placeholder="239.21">
+        <button class="save-btn" onclick="saveCds()">Kaydet</button>
+      </div>
+      <div style="font-size:11px;color:var(--muted);margin-bottom:16px;padding:0 2px" id="cdsUpdatedAt">—</div>
+
+      <div class="divider"></div>
+      <div class="section-title">Alt Skor Detayı</div>
+      <div id="subScores"><div class="loading"><div class="spinner"></div>Hesaplanıyor...</div></div>
+    </div>
+
+    <!-- ── GEÇMİŞ ── -->
+    <div class="section" id="s-gecmis">
+      <div class="section-title">Haftalık Snapshot Geçmişi</div>
+      <div id="gecmisList"><div class="loading"><div class="spinner"></div>Yükleniyor...</div></div>
+      <div class="chart-wrap" style="margin-top:16px">
+        <div class="chart-title">Kur Baskısı Trendi</div>
+        <div class="chart-canvas-wrap">
+          <canvas id="trendChart" role="img" aria-label="Kur baskısı olasılığı trendi">Kur baskısı trendi</canvas>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script src="/app.js"></script>
+</body>
+</html>

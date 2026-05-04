@@ -1,5 +1,9 @@
-// api/cds.js - CDS değerini Vercel KV'de saklar
-import { kv } from '@vercel/kv';
+import { Redis } from '@upstash/redis';
+
+const redis = new Redis({
+  url: process.env.KV_REST_API_URL,
+  token: process.env.KV_REST_API_TOKEN,
+});
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -8,17 +12,17 @@ export default async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(200).end();
 
   if (req.method === 'GET') {
-    const data = await kv.get('cds_current') || { value: 239.21, updatedAt: null };
+    const data = await redis.get('cds_current') || { value: 239.21, updatedAt: null };
     return res.status(200).json(data);
   }
 
   if (req.method === 'POST') {
     const { value } = req.body;
     if (!value || isNaN(parseFloat(value))) {
-      return res.status(400).json({ error: 'Geçersiz değer' });
+      return res.status(400).json({ error: 'Gecersiz deger' });
     }
     const data = { value: parseFloat(value), updatedAt: new Date().toISOString() };
-    await kv.set('cds_current', data);
+    await redis.set('cds_current', data);
     return res.status(200).json(data);
   }
 

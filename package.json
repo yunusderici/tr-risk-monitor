@@ -7,6 +7,6 @@
     "build": "echo 'No build step needed'"
   },
   "dependencies": {
-    "@vercel/kv": "^1.0.0"
+    "@upstash/redis": "^1.28.0"
   }
 }

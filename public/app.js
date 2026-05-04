@@ -64,17 +64,20 @@ function showToast(msg, type='') {
   setTimeout(() => t.className = 'toast', 3000);
 }
 
-// CDS bu hafta güncellenmiş mi?
-function cdsUpdatedThisWeek() {
+// CDS bugün güncellenmiş mi?
+function cdsUpdatedToday() {
   if (!state.market.cdsUpdatedAt) return false;
   const upd = new Date(state.market.cdsUpdatedAt);
   const now = new Date();
-  // Aynı yıl + aynı hafta kontrolü
-  const getWeek = d => {
-    const jan1 = new Date(d.getFullYear(), 0, 1);
-    return Math.ceil(((d - jan1) / 86400000 + jan1.getDay() + 1) / 7);
-  };
-  return upd.getFullYear() === now.getFullYear() && getWeek(upd) === getWeek(now);
+  return upd.getFullYear() === now.getFullYear() &&
+         upd.getMonth() === now.getMonth() &&
+         upd.getDate() === now.getDate();
+}
+
+// Bugün iş günü mü? (Pzt-Cum)
+function isWeekday() {
+  const day = new Date().getDay();
+  return day >= 1 && day <= 5;
 }
 
 // Bu hafta snapshot alınmış mı?
@@ -262,7 +265,8 @@ async function tryAutoSnapshot() {
 function updateCdsWarning() {
   const el = document.getElementById('cdsWarning');
   if (!el) return;
-  if (!cdsUpdatedThisWeek()) {
+  // Sadece iş günlerinde (Pzt-Cum) uyar
+  if (isWeekday() && !cdsUpdatedToday()) {
     el.style.display = 'flex';
   } else {
     el.style.display = 'none';
@@ -491,7 +495,7 @@ async function init() {
   updateCdsWarning();
 
   // Eğer CDS bu hafta güncellendiyse otomatik snapshot dene
-  if (cdsUpdatedThisWeek()) await tryAutoSnapshot();
+  if (cdsUpdatedToday()) await tryAutoSnapshot();
 }
 
 document.addEventListener('DOMContentLoaded', init);
